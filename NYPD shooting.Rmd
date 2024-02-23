@@ -1,0 +1,86 @@
+---
+title: "NYPD Shooting Data Analysis"
+author: "Ray"
+date: "2024-02-12"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Introduction: The number of shooting incidents can reflect the security circumstance of an area indirectly. I conduct an analysis on the NYPD shooting dataset to investigate the trend of security in New York.
+
+DataSource:NYPD Shooting Incident Data (Historic)   
+https://catalog.data.gov/dataset/nypd-shooting-incident-data-historic
+
+I am interested in three questions: 
+1.How many incidents are in each borough?
+2.What are the year-to-year trends in the number of total shootings in New York?
+3.Can I generate a model to simulate it?
+
+```{r}
+library(ggplot2)
+url <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD"
+data <- read.csv(url)
+ggplot(data = data, aes(x = BORO)) +  
+  geom_bar() +
+  labs(title="BORO Count",  
+       x = "Borough",
+       y = "Frequency") +
+  geom_text(stat='count', aes(label=..count..), vjust=-0.5)
+```
+
+
+
+
+Analysis and identify bias:
+The frequency was influenced by the population in each borough, the poverty degree and other factors. This result can not indicate directly that Brooklyn is absolute not safe.The population of staten island is relatively small to other boroughs, so the incident number of staten island looks like smaller. 
+Also, the number of cases recorded may be skewed because of the uneven distribution of police forces, for example, where police forces are scarce, shootings may not be recorded even though they occur.
+
+```{r}
+library(ggplot2)
+url <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD"
+data <- read.csv(url)
+data$Year <- format(as.Date(data$OCCUR_DATE, "%m/%d/%Y"), "%Y")  
+year_count <- table(data$Year)
+year_count_df <- as.data.frame(year_count)
+year_count_df$Year <- as.numeric(row.names(year_count_df))
+
+ggplot(year_count_df, aes(x = Var1, y = Freq)) +
+  geom_line(aes(group = 1)) +
+  geom_point(shape = 19) +
+  labs(
+    x = "Year",
+    y = "Number of Shootings",
+    title = "NYPD Shootings by Year"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(year_count), length.out = 6)) +
+  theme_minimal()
+```
+
+
+Analysis:
+The number of shootings was declining until pandemic, and policing conditions were gradually improving. But the pandemic may have caused the incomes of many to fall, thus causing the number of shootings to rise again.
+
+
+
+```{r}
+library(ggplot2)
+fit <- lm(year_count ~ as.numeric(names(year_count)))
+pred <- predict(fit, newdata = data.frame(names(year_count)))
+df <- data.frame(
+  Year = as.numeric(names(year_count))
+)
+
+ggplot(df, aes(x = Year, y = year_count)) +
+  geom_point(shape = 19) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    x = "Year",
+    y = "Number of Shootings",
+    title = "NYPD Shootings by Year"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(year_count), length = 6)) +
+  theme_minimal()
+```
+
