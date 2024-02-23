@@ -1,0 +1,264 @@
+---
+title: "JHU Dataset"
+author: "Ray"
+date: "2024-02-19"
+output: html_document
+---
+<h2 style="font-size: 24px;">INTRODUCTION</h2>
+The Johns Hopkins University (JHU) dataset on global COVID-19 records is a widely utilized resource containing various data points related to the COVID-19 pandemic. This dataset includes information on confirmed cases, deaths, recoveries, and more, categorized by country/region, province/state, and date. The data is valuable for monitoring the spread of the pandemic, analyzing trends, and informing public health policies.
+
+<h2 style="font-size: 24px;">Data Source</h2>
+Johns Hopkins University  Covid-19 dataset on GITHUB. THis dataset records the amount of global cases, death and recovered over time.  
+URL: https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series
+
+<h2 style="font-size: 24px;">The Questions I want to address</h2>
+1.Trends over time in the number of confirmed, deaths and recovered cases of Singapore  
+2.Trends over time in the number of confirmed, deaths and recovered cases of Malaysia  
+3.Trends over time of death rates of Singapore and Malaysia  
+4.Simulate the trend of confirmed cases of Singapore
+
+```{r setup, include=FALSE}
+library(tidyverse)
+url_in <- "https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series/"
+file_names<- c("time_series_covid19_confirmed_global.csv",
+              "time_series_covid19_deaths_global.csv",
+              "time_series_covid19_recovered_global.csv")
+urls<- str_c(url_in,file_names)
+```
+
+```{r}
+confirmed_data <- read_csv("time_series_covid19_confirmed_global.csv",show_col_types = FALSE)
+singapore_confirmed <- confirmed_data %>%
+  filter(`Country/Region` == "Singapore")
+
+deaths_data <- read_csv("time_series_covid19_deaths_global.csv",show_col_types = FALSE)
+singapore_deaths <- deaths_data %>%
+  filter(`Country/Region` == "Singapore")
+
+recovered_data <- read_csv("time_series_covid19_recovered_global.csv",show_col_types = FALSE)
+singapore_recovered <- recovered_data %>%
+  filter(`Country/Region` == "Singapore")
+
+head(singapore_confirmed[, 1:10])
+head(singapore_deaths[, 1:10])
+head(singapore_recovered[, 1:10])
+```
+
+```{r}
+library(tidyverse)
+
+singapore_confirmed_long <- singapore_confirmed %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Confirmed") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+singapore_deaths_long <- singapore_deaths %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Deaths") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+singapore_recovered_long <- singapore_recovered %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Recovered") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+singapore_confirmed_long <- singapore_confirmed_long %>%
+  mutate(Ordinal = row_number())
+
+singapore_deaths_long <- singapore_deaths_long %>%
+  mutate(Ordinal = row_number())
+
+singapore_recovered_long <- singapore_recovered_long %>%
+  mutate(Ordinal = row_number())
+
+ggplot() +
+  geom_line(data = singapore_confirmed_long, aes(x = Ordinal, y = Confirmed, color = "Confirmed")) +
+  geom_line(data = singapore_deaths_long, aes(x = Ordinal, y = Deaths, color = "Deaths")) +
+  geom_line(data = singapore_recovered_long, aes(x = Ordinal, y = Recovered, color = "Recovered")) +
+  labs(x = "Ordinal Day(Starts from 1/22/2020)", y = "Cases", title = "COVID-19 Cases in Singapore") +
+  scale_color_manual(values = c("Confirmed" = "blue", "Deaths" = "red", "Recovered" = "green"),
+                     labels = c("Confirmed", "Deaths", "Recovered"))
+
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+The recovered cases data stopped to be recorded on August 5, 2021, so the value of the data on the line graph became 0. The sharp rise in the number of confirmed cases makes the number of recovered cases less important.  
+The number of confirmed cases is growing near exponentially.
+```{r}
+library(tidyverse)
+
+singapore_deaths_long <- singapore_deaths %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Deaths") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+singapore_deaths_long <- singapore_deaths_long %>%
+  mutate(Ordinal = row_number())
+
+ggplot(data = singapore_deaths_long, aes(x = Ordinal, y = Deaths)) +
+  geom_line() +
+  labs(x = "Ordinal Day(Starts from 1/22/2020)", y = "Deaths Cases", title = "COVID-19 Deaths Cases in Singapore")
+
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+Because the number of deaths is too small compared to the number of confirmed cases to show the trend of the number of deaths well in that graph above, I generate this graph separately to show the trend of death cases.
+
+```{r}
+
+malaysia_confirmed <- confirmed_data %>%
+  filter(`Country/Region` == "Malaysia")
+
+malaysia_deaths <- deaths_data %>%
+  filter(`Country/Region` == "Malaysia")
+
+malaysia_recovered <- recovered_data %>%
+  filter(`Country/Region` == "Malaysia")
+
+head(malaysia_confirmed[, 1:10])
+head(malaysia_deaths[, 1:10])
+head(malaysia_recovered[, 1:10])
+```
+```{r}
+malaysia_confirmed_long <- malaysia_confirmed %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Confirmed") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+malaysia_deaths_long <- malaysia_deaths %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Deaths") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+malaysia_recovered_long <- malaysia_recovered %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Recovered") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+malaysia_confirmed_long <- malaysia_confirmed_long %>%
+  mutate(Ordinal = row_number())
+
+malaysia_deaths_long <- malaysia_deaths_long %>%
+  mutate(Ordinal = row_number())
+
+malaysia_recovered_long <- malaysia_recovered_long %>%
+  mutate(Ordinal = row_number())
+
+ggplot() +
+  geom_line(data = malaysia_confirmed_long, aes(x = Ordinal, y = Confirmed, color = "Confirmed")) +
+  geom_line(data = malaysia_deaths_long, aes(x = Ordinal, y = Deaths, color = "Deaths")) +
+  geom_line(data = malaysia_recovered_long, aes(x = Ordinal, y = Recovered, color = "Recovered")) +
+  labs(x = "Ordinal Day(Starts from 1/22/2020)", y = "Cases", title = "COVID-19 Cases in Malaysia") +
+  scale_color_manual(values = c("Confirmed" = "blue", "Deaths" = "red", "Recovered" = "green"),
+                     labels = c("Confirmed", "Deaths", "Recovered")) +
+  scale_y_continuous(labels = scales::comma)  
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+The recovered cases data stopped to be recorded on August 5, 2021, so the value of the data on the line graph became 0. The sharp rise in the number of confirmed cases makes the number of recovered cases less important.  
+The number of confirmed cases is growing near exponentially.
+```{r}
+malaysia_deaths_long <- malaysia_deaths %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Deaths") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long))
+
+malaysia_deaths_long <- malaysia_deaths_long %>%
+  mutate(Ordinal = row_number())
+
+ggplot(data = malaysia_deaths_long, aes(x = Ordinal, y = Deaths)) +
+  geom_line() +
+  labs(x = "Ordinal Day (Starts from 1/22/2020)", y = "Deaths Cases", title = "COVID-19 Deaths Cases in Malaysia")
+
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+Because the number of deaths is too small compared to the number of confirmed cases to show the trend of the number of deaths well in that graph above, I generate this graph separately to show the trend of death cases.
+```{r}
+
+singapore_death_rate <- singapore_deaths %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long)) / singapore_confirmed %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long)) * 100
+malaysia_death_rate <- malaysia_deaths %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long)) / malaysia_confirmed %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long)) * 100
+
+
+
+# 添加序数列
+singapore_death_rate <- singapore_death_rate %>%
+  mutate(Ordinal = 1:n())  
+
+malaysia_death_rate <- malaysia_death_rate %>%
+  mutate(Ordinal = 1:n())  
+
+# 转换为长格式
+singapore_death_rate_long <- singapore_death_rate %>%
+  pivot_longer(cols = -c(Ordinal), names_to = "Date", values_to = "Death_Rate")
+
+malaysia_death_rate_long <- malaysia_death_rate %>%
+  pivot_longer(cols = -c(Ordinal), names_to = "Date", values_to = "Death_Rate")
+
+
+singapore_death_rate_long <- singapore_death_rate_long %>%
+  mutate_at(vars(Ordinal), list(~c(1:n())))
+
+
+malaysia_death_rate_long <- malaysia_death_rate_long %>%
+  mutate_at(vars(Ordinal), list(~c(1:n())))
+
+combined_rate_data <- bind_rows(
+  mutate(singapore_death_rate_long, Country = "Singapore"),
+  mutate(malaysia_death_rate_long, Country = "Malaysia")
+)
+
+
+ggplot(data = combined_rate_data, aes(x = Ordinal, y = Death_Rate, color = Country)) +
+  geom_line() +
+  labs(x = "Ordinal Day (Starts from 1/22/2020)", y = "Death Rate (%)", title = "COVID-19 Death Rate Comparison") +
+  scale_color_manual(values = c("Singapore" = "blue", "Malaysia" = "red"))
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+At the beginning, people did not know how to face SARS-Cov-2, one the one hand, we did not control the trend of increase, on the other hand, the death rates reached the peak in both Malaysia and Singapore. Around 680 days later, Omicron appeared. The sharp rise in the number of confirmed cases overcrowded hospitals and caused a medical run, so the death rate peaked for the second time. Singapore's mortality rate is better controlled than that of its neighboring country, Malaysia, because of better medical care and a higher level of social development. 
+
+
+<h2 style="font-size: 24px;">Model</h2>
+```{r}
+library(tidyverse)
+
+singapore_confirmed_long <- singapore_confirmed %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), 
+               names_to = "Date", 
+               values_to = "Confirmed") %>%
+  select(-c(`Province/State`, `Country/Region`, Lat, Long)) %>%
+  mutate(Ordinal = row_number())
+
+fit <- lm(Confirmed ~ poly(Ordinal, 6), data = singapore_confirmed_long)
+
+r_squared <- summary(fit)$r.squared
+
+ggplot(data = singapore_confirmed_long, aes(x = Ordinal, y = Confirmed)) +
+  geom_line(aes(color = "Confirmed"), show.legend = TRUE) +
+  geom_smooth(aes(color = "Fit"), method = "lm", formula = y ~ poly(x, 10), se = FALSE) +
+  geom_text(x = 50, y = max(singapore_confirmed_long$Confirmed), 
+            label = paste("R-squared =", round(r_squared, 3)), 
+            color = "black", size = 4, hjust = 0) +
+  labs(x = "Ordinal Day (Starts from 1/22/2020)", y = "Cases", 
+       title = "COVID-19 Cases in Singapore with Polynomial Fit and R-squared Value") +
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Confirmed", "Fit"))
+
+
+```
+<h3 style="font-size: 24px;">Analysis</h3>
+I deploy a polynomial function to simulate the trend of confirmed cases of Singapore. Because the number of confirmed cases is affected by the number of tests, the capacity of the tests, and the strength of the government's out-of-home restraining order, it doesn't change at an increasing rate all the time, but fluctuates.  I control the degree of polynomial regression to avoid overfitting. 
+
+
+<h2 style="font-size: 24px;">Conclusion and possible sources of bias</h2>
+Conclusion: Overall, the trends in the number of confirmed, recovered and fatal cases were similar in Singapore and Malaysia. However, the number of confirmed cases started to increase sharply later in Singapore than in Malaysia. Singapore's mortality rate has also been almost consistently lower than Malaysia's.  
+
+Bias:There is a big difference in the number of population between the two countries, Singapore has 5,450,000 people and Malaysia has 33,570,000 people, similarly, the land area of the two countries is also very different, Singapore has only 728 square kilometers and Malaysia has 330,803 square kilometers, similarly, the GDP per capita of the two countries is also very different, Singapore has a GDP per capita of 72,794 USD and Malaysia has a GDP per capita of Although the two countries are neighboring countries, there is a big difference between them in terms of the strictness of preventive and control measures and their ability to cope with outbreaks, and the accuracy of the statistical results. In contrast, Singapore's data may better reflect the local outbreak level, while Malaysia's data may have some omissions and lags.
